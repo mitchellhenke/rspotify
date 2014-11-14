@@ -81,9 +81,13 @@ module RSpotify
     #           mixed   = RSpotify::Base.search('Arctic', 'artist, album, track')
     #           albums  = RSpotify::Base.search('AM', 'album', market: { from: user })
     #
-    #           RSpotify::Base.search('Arctic', 'album,artist,playlist').total #=> 2142
-    def self.search(query, types, limit: 20, offset: 0, market: nil)
+    #           albums = RSpotify::Base.search('AM', 'album', limit: 10)
+    #           albums.size #=> 10
+    def self.search(query, types, options = {limit: 20, offset: 0, market: nil})
       query = URI::encode query
+      limit = options[:limit] || 20
+      offset = options[:offset] || 0
+      market = options[:market]
       types.gsub!(/\s+/, '')
 
       url = "search?q=#{query}&type=#{types}"\

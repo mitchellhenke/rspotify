@@ -61,9 +61,11 @@ module RSpotify
     #           albums = RSpotify::Album.search('AM', limit: 10, market: 'US')
     #           albums = RSpotify::Album.search('AM', market: { from: user })
     #
-    #           RSpotify::Album.search('AM').total #=> 9374
-    def self.search(query, limit: 20, offset: 0, market: nil)
-      super(query, 'album', limit: limit, offset: offset, market: market)
+    def self.search(query, options = {limit: 20, offset: 0, market: nil})
+      limit = options[:limit] || 20
+      offset = options[:offset] || 0
+      market = options[:market]
+      super(query, 'album', {limit: limit, offset: offset, market: market})
     end
 
     def initialize(options = {})
@@ -98,7 +100,9 @@ module RSpotify
     # @example
     #           album = RSpotify::Album.find('41vPD50kQ7JeamkxQW7Vuy')
     #           album.tracks.first.name #=> "Do I Wanna Know?"
-    def tracks(limit: 50, offset: 0)
+    def tracks(options = {limit: 50, offset: 0})
+      limit = options[:limit] || 50
+      offset = options[:offset] || 0
       last_track = offset + limit - 1
       if @tracks_cache && last_track < 50
         return @tracks_cache[offset..last_track]

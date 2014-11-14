@@ -45,8 +45,13 @@ module RSpotify
     #           tracks = RSpotify::Track.search('Wanna Know', market: { from: user })
     #
     #           RSpotify::Track.search('Wanna Know').total #=> 3686
-    def self.search(query, limit: 20, offset: 0, market: nil)
-      super(query, 'track', limit: limit, offset: offset, market: market)
+    #           tracks = RSpotify::Track.search('Thriller', limit: 10)
+    #           tracks.size #=> 10
+    def self.search(query, options = {limit: 20, offset: 0, market: nil})
+      limit = options[:limit] || 20
+      offset = options[:offset] || 0
+      market = options[:market]
+      super(query, 'track', {limit: limit, offset: offset, market: market})
     end
 
     def initialize(options = {})

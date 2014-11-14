@@ -100,7 +100,8 @@ module RSpotify
     #           playlist = user.create_playlist!('my-second-playlist', public: false)
     #           playlist.name   #=> "my-second-playlist"
     #           playlist.public #=> false
-    def create_playlist!(name, public: true)
+    def create_playlist!(name, options = {public: true})
+      public = options[:public]
       url = "users/#{@id}/playlists"
       request_data = { name: name, public: public }.to_json
       Playlist.new User.oauth_post(@id, url, request_data)
@@ -175,7 +176,9 @@ module RSpotify
     #           playlists.class       #=> Array
     #           playlists.first.class #=> RSpotify::Playlist
     #           playlists.first.name  #=> "Movie Soundtrack Masterpieces"
-    def playlists(limit: 20, offset: 0)
+    def playlists(options = {limit: 20, offset: 0})
+      limit = options[:limit] || 20
+      offset = options[:offset] || 0
       url = "users/#{@id}/playlists?limit=#{limit}&offset=#{offset}"
       json = RSpotify.resolve_auth_request(@id, url)
       json['items'].map { |i| Playlist.new i }
@@ -228,7 +231,9 @@ module RSpotify
     #           tracks = user.saved_tracks
     #           tracks.size       #=> 20
     #           tracks.first.name #=> "Do I Wanna Know?"
-    def saved_tracks(limit: 20, offset: 0)
+    def saved_tracks(options = {limit: 20, offset: 0})
+      limit = options[:limit] || 20
+      offset = options[:offset] || 0
       url = "me/tracks?limit=#{limit}&offset=#{offset}"
       json = User.oauth_get(@id, url)
       

@@ -38,9 +38,13 @@ module RSpotify
     #           artists = RSpotify::Artist.search('Arctic', limit: 10, market: 'US')
     #           artists = RSpotify::Artist.search('Arctic', market: { from: user })
     #
-    #           RSpotify::Artist.search('Arctic').total #=> 86
-    def self.search(query, limit: 20, offset: 0, market: nil)
-      super(query, 'artist', limit: limit, offset: offset, market: market)
+    #           artists = RSpotify::Artist.search('Arctic', limit: 10)
+    #           artists.size #=> 10
+    def self.search(query, options = {limit: 20, offset: 0, market: nil})
+      limit = options[:limit] || 20
+      offset = options[:offset] || 0
+      market = options[:market]
+      super(query, 'artist', {limit: limit, offset: offset, market: market})
     end
 
     def initialize(options = {})
@@ -66,7 +70,9 @@ module RSpotify
     #           artist.albums
     #           artist.albums(album_type: 'single,compilation')
     #           artist.albums(limit: 50, country: 'US')
-    def albums(limit: 20, offset: 0, **filters)
+    def albums(options = {limit: 20, offset: 0}, filters = {})
+      limit = options[:limit] || 20
+      offset = options[:offset] || 0
       url = "artists/#{@id}/albums?limit=#{limit}&offset=#{offset}"
       filters.each do |filter_name, filter_value|
         url << "&#{filter_name}=#{filter_value}"
