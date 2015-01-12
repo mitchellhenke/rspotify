@@ -41,7 +41,11 @@ module RSpotify
     # @example
     #           albums = RSpotify::Album.new_releases
     #           albums = RSpotify::Album.new_releases(country: 'US', limit: 10)
-    def self.new_releases(limit: 20, offset: 0, country: nil)
+    def self.new_releases(options = {limit: 20, offset: 0, country: nil})
+      limit = options[:limit] || 20
+      offset = options[:offset] || 0
+      country = options[:country]
+
       url = "browse/new-releases?limit=#{limit}&offset=#{offset}"
       url << "&country=#{country}" if country
       json = RSpotify.auth_get(url)
