@@ -84,6 +84,7 @@ module RSpotify
     #           albums = RSpotify::Base.search('AM', 'album', limit: 10)
     #           albums.size #=> 10
     def self.search(query, types, options = {limit: 20, offset: 0, market: nil})
+      query = CGI.escape query
       query = URI::encode query
       limit = options[:limit] || 20
       offset = options[:offset] || 0
@@ -167,7 +168,7 @@ module RSpotify
       return nil unless tracks
       pairs = tracks.map do |track|
         key = track['track']['id']
-        value = yield track[field] if track[field]
+        value = yield track[field] unless track[field].nil?
         [key, value]
       end
       Hash[pairs]

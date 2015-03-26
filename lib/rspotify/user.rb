@@ -1,5 +1,6 @@
 module RSpotify
 
+  # @attr [String] birthdate       The user's date-of-birth. This field is only available when the current user has granted access to the *user-read-birthdate* scope.
   # @attr [String] country         The country of the user, as set in the user's account profile. An {http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2 ISO 3166-1 alpha-2 country code}. This field is only available when the current user has granted access to the *user-read-private* scope.
   # @attr [Hash]   credentials     The credentials generated for the user with OAuth. Includes access token, token type, token expiration time and refresh token. This field is only available when the current user has granted access to any scope.
   # @attr [String] display_name    The name displayed on the user's profile. This field is only available when the current user has granted access to the *user-read-private* scope.
@@ -23,7 +24,7 @@ module RSpotify
       super(id, 'user')
     end
 
-    # Spotify does not support search for users. Prints warning and returns false
+    # Spotify does not support search for users.
     def self.search(*)
       warn 'Spotify API does not support search for users'
       false
@@ -69,6 +70,7 @@ module RSpotify
       credentials = options['credentials']
       options     = options['info'] if options['info']
 
+      @birthdate    ||= options['birthdate']
       @country      ||= options['country']
       @display_name ||= options['display_name']
       @email        ||= options['email']
@@ -85,8 +87,8 @@ module RSpotify
       end
     end
 
-    # Creates a playlist in user's Spotify account. This method is only available when the current user
-    # has granted access to the *playlist-modify* and *playlist-modify-private* scopes.
+    # Creates a playlist in user's Spotify account. This method is only available when the current
+    # user has granted access to the *playlist-modify-public* and *playlist-modify-private* scopes.
     #
     # @param name [String] The name for the new playlist
     # @param public [Boolean] Whether the playlist is public or private. Default: true

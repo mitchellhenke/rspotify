@@ -3,7 +3,7 @@ module RSpotify
   # @attr [Boolean]     collaborative   true if the owner allows other users to modify the playlist
   # @attr [String]      description     The playlist description
   # @attr [Hash]        followers       Information about the followers of the playlist
-  # @attr [Array<Hash>] images          The playlist images
+  # @attr [Array<Hash>] images          Images for the playlist. The array may be empty or contain up to three images. The images are returned by size in descending order. If returned, the source URL for the image is temporary and will expire in less than one day.
   # @attr [String]      name            The name of the playlist
   # @attr [User]        owner           The user who owns the playlist
   # @attr [Boolean]     public          true if the playlist is not marked as secret
@@ -11,14 +11,15 @@ module RSpotify
   # @attr [Integer]     total           The total number of tracks in the playlist
   # @attr [Hash]        tracks_added_at A hash containing the date and time each track was added to the playlist. Note: the hash is updated only when {#tracks} is used.
   # @attr [Hash]        tracks_added_by A hash containing the user that added each track to the playlist. Note: the hash is updated only when {#tracks} is used.
+  # @attr [Hash]        tracks_is_local A hash showing whether each track is local or not. Note: the hash is updated only when {#tracks} is used.
   class Playlist < Base
 
     # Get a list of Spotify featured playlists (shown, for example, on a Spotify player’s “Browse” tab).
     #
     # @param limit    [Integer] Maximum number of playlists to return. Maximum: 50. Default: 20.
     # @param offset   [Integer] The index of the first playlist to return. Use with limit to get the next set of playlists. Default: 0.
-    # @param locale    [String] Optional. The desired language, consisting of a lowercase {http://en.wikipedia.org/wiki/ISO_639 ISO 639 language code} and an uppercase {http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2 ISO 3166-1 alpha-2 country code}, joined by an underscore. For details access {https://developer.spotify.com/web-api/get-list-featured-playlists/ here} and look for the locale parameter description.
     # @param country   [String] Optional. A country: an {http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2 ISO 3166-1 alpha-2 country code}. Provide this parameter if you want the list of returned playlists to be relevant to a particular country. If omitted, the returned playlists will be relevant to all countries.
+    # @param locale    [String] Optional. The desired language, consisting of a lowercase {http://en.wikipedia.org/wiki/ISO_639 ISO 639 language code} and an uppercase {http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2 ISO 3166-1 alpha-2 country code}, joined by an underscore. For details access {https://developer.spotify.com/web-api/get-list-featured-playlists/ here} and look for the locale parameter description.
     # @param timestamp [String] Optional. A timestamp in {http://en.wikipedia.org/wiki/ISO_8601 ISO 8601} format: yyyy-MM-ddTHH:mm:ss. Use this parameter to specify the user's local time to get results tailored for that specific date and time in the day. If not provided, the response defaults to the current UTC time. Example: "2014-10-23T09:00:00" for a user whose local time is 9AM.
     # @return [Array<Playlist>]
     #
@@ -103,11 +104,15 @@ module RSpotify
         User.new added_by
       end
 
+      @tracks_is_local = hash_for(tracks, 'is_local') do |is_local|
+        is_local
+      end
+
       super(options)
     end
 
-    # Adds one or more tracks to a playlist in user's Spotify account. This method is only available when
-    # the current user has granted access to the *playlist-modify* and *playlist-modify-private* scopes.
+    # Adds one or more tracks to a playlist in user's Spotify account. This method is only available when the
+    # current user has granted access to the *playlist-modify-public* and *playlist-modify-private* scopes.
     #
     # @param tracks [Array<Track>] Tracks to be added. Maximum: 100 per request
     # @param position [Integer, NilClass] The position to insert the tracks, a zero-based index. Default: tracks are appended to the playlist
@@ -135,8 +140,8 @@ module RSpotify
       tracks
     end
 
-    # Change name and public/private state of playlist in user's Spotify account. Changing a public playlist
-    # requires the *playlist-modify* scope; changing a private playlist requires the *playlist-modify-private* scope.
+    # Change name and public/private state of playlist in user's Spotify account. Changing a public playlist requires
+    # the *playlist-modify-public* scope; changing a private playlist requires the *playlist-modify-private* scope.
     #
     # @param name   [String]  Optional. The new name for the playlist.
     # @param public [Boolean] Optional. If true the playlist will be public, if false it will be private.
@@ -201,13 +206,45 @@ module RSpotify
         User.new added_by
       end
 
+      @tracks_is_local = hash_for(tracks, 'is_local') do |is_local|
+        is_local
+      end
+
       tracks.map! { |t| Track.new t['track'] }
       @tracks_cache = tracks if limit == 100 && offset == 0
       tracks
     end
 
-    # Replace all the tracks in a playlist, overwriting its existing tracks. Changing a public playlist
-    # requires the *playlist-modify* scope; changing a private playlist requires the *playlist-modify-private* scope.
+    # Reorder a track or a group of tracks in a playlist. Changing a public playlist requires the
+    # *playlist-modify-public* scope; changing a private playlist requires the *playlist-modify-private* scope.
+    #
+    # @param range_start   [Integer] The position of the first track to be reordered.
+    # @param insert_before [Integer] The position where the tracks should be inserted. To reorder the tracks to the end of the playlist, simply set insert_before to the position after the last track.
+    # @param range_length  [Integer] Optional. The amount of tracks to be reordered. Default: 1.
+    # @param snapshot_id   [String]  Optional. The playlist's snapshot ID against which you want to make the changes.
+    # @return [Playlist]
+    #
+    # @example
+    #           range_start = 10
+    #           insert_before = 0
+    #           # Move the tracks at index 10-14 to the start of the playlist
+    #           playlist.reorder_tracks!(range_start, insert_before, range_length: 5)
+    def reorder_tracks!(range_start, insert_before, **options)
+      url = "#{@href}/tracks"
+      data = {
+        range_start: range_start,
+        insert_before: insert_before
+      }.merge options
+
+      response = User.oauth_put(@owner.id, url, data.to_json)
+      @snapshot_id = response['snapshot_id']
+      @tracks_cache = nil
+
+      self
+    end
+
+    # Replace all the tracks in a playlist, overwriting its existing tracks. Changing a public playlist requires
+    # the *playlist-modify-public* scope; changing a private playlist requires the *playlist-modify-private* scope.
     #
     # @param tracks [Array<Track>] The tracks that will replace the existing ones. Maximum: 100 per request
     # @return [Array<Track>] The tracks that were added.

@@ -27,7 +27,11 @@ Or install it yourself as:
 
 ## Usage
 
-Directly access Spotify public data such as albums, tracks, artists, playlists and users:
+RSpotify was designed with usability as its primary goal, so that you can forget the API and intuitively interact with your playlists, favorite artists, users and so on.
+
+You can write things like `playlist.tracks.sort_by(&:popularity).last.album` without having to think which API calls must be done. RSpotify fills the gaps for you.
+
+Below are some basic usage examples. Check the [documentation](http://rdoc.info/github/guilhermesad/rspotify/master/frames) for the complete reference.
 
 ```ruby
 require 'rspotify'
@@ -93,28 +97,27 @@ Then just copy and paste them like so:
 ```ruby
 RSpotify.authenticate("<your_client_id>", "<your_client_secret>")
 
-# Now you can access any public playlist in detail and much more
+# Now you can access playlists in detail, browse featured content and more
 
+wizzler = RSpotify::User.find('wizzler')
+wizzler.playlists #=> (Playlist array)
+
+# Find by id
 playlist = RSpotify::Playlist.find('wizzler', '00wHcTN0zQiun4xri9pmvX')
 playlist.name               #=> "Movie Soundtrack Masterpieces"
 playlist.description        #=> "Iconic soundtracks featured..."
 playlist.followers['total'] #=> 13
 playlist.tracks             #=> (Track array)
 
-# Get user's playlist
-my_user = RSpotify::User.find("my_user")
-my_playlists = my_user.playlists #=> (Playlist array)
+# Search by category
+party = RSpotify::Category.find('party')
+party.playlists #=> (Playlist array)
+categories = RSpotify::Category.list # See all available categories
 
 # Access featured content from Spotify's Browse tab
 featured_playlists = RSpotify::Playlist.browse_featured(country: 'US')
 new_releases = RSpotify::Album.new_releases(country: 'ES')
 ```
-
-RSpotify focuses on objects behaviour so you can forget the API and worry about your tracks, artists and so on.
-
-It is possible to write things like `playlist.tracks.sort_by(&:popularity).last.album` without having to think what API calls must be done. RSpotify fills the gaps for you.
-
-Check the [documentation](http://rdoc.info/github/guilhermesad/rspotify/master/frames) for all attributes and methods of albums, artists, etc.
 
 ## Rails + OAuth
 
