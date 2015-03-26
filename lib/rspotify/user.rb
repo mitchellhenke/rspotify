@@ -124,7 +124,9 @@ module RSpotify
     #
     #           playlist = RSpotify::Playlist.search('Movie').first
     #           user.follow(playlist, public: false)
-    def follow(followed, public: true)
+    def follow(followed, options = {})
+      public = options[:public] || true
+
       if followed.is_a? Array
         ids = followed.map(&:id).join(',')
         type = followed.first.type

@@ -27,7 +27,9 @@ module RSpotify
     #           playlists = RSpotify::Playlist.browse_featured
     #           playlists = RSpotify::Playlist.browse_featured(locale: 'es_MX', limit: 10)
     #           playlists = RSpotify::Playlist.browse_featured(country: 'US', timestamp: '2014-10-23T09:00:00')
-    def self.browse_featured(limit: 20, offset: 0, **options)
+    def self.browse_featured(options = {})
+      limit = options.delete(:limit) || 20
+      offset = options.delete(:offset) || 0
       url = "browse/featured-playlists?limit=#{limit}&offset=#{offset}"
       options.each do |option, value|
         url << "&#{option}=#{value}"
@@ -229,7 +231,7 @@ module RSpotify
     #           insert_before = 0
     #           # Move the tracks at index 10-14 to the start of the playlist
     #           playlist.reorder_tracks!(range_start, insert_before, range_length: 5)
-    def reorder_tracks!(range_start, insert_before, **options)
+    def reorder_tracks!(range_start, insert_before, options = {})
       url = "#{@href}/tracks"
       data = {
         range_start: range_start,

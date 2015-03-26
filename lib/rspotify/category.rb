@@ -20,7 +20,7 @@ module RSpotify
     #           category = RSpotify::Category.find('party')
     #           category = RSpotify::Category.find('party', country: 'US')
     #           category = RSpotify::Category.find('party', locale: 'es_MX')
-    def self.find(id, **options)
+    def self.find(id, options = {})
       url = "browse/categories/#{id}"
       url << '?' if options.any?
 
@@ -45,7 +45,9 @@ module RSpotify
     #           categories = RSpotify::Category.list
     #           categories = RSpotify::Category.list(country: 'US')
     #           categories = RSpotify::Category.list(locale: 'es_MX', limit: 10)
-    def self.list(limit: 20, offset: 0, **options)
+    def self.list(options = {})
+      limit = options.delete(:limit) || 20
+      offset = options.delete(:offset) || 0
       url = "browse/categories?limit=#{limit}&offset=#{offset}"
       options.each do |option, value|
         url << "&#{option}=#{value}"
@@ -83,7 +85,9 @@ module RSpotify
     #           playlists = category.playlists
     #           playlists = category.playlists(country: 'BR')
     #           playlists = category.playlists(limit: 10, offset: 20)
-    def playlists(limit: 20, offset: 0, **options)
+    def playlists(options = {})
+      limit = options.delete(:limit) || 20
+      offset = options.delete(:offset) || 0
       url = "browse/categories/#{@id}/playlists"\
             "?limit=#{limit}&offset=#{offset}"
 
